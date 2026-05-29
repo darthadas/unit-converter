@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Unit Converter — Free Online Tool</title>
+  <meta name="description" content="Convert length, weight, temperature and speed instantly. Free online unit converter, no signup required.">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+      padding: 40px 20px;
+      color: #333;
+    }
+    .container { max-width: 600px; margin: 0 auto; }
+    h1 { font-size: 1.8rem; margin-bottom: 6px; }
+    .subtitle { color: #777; font-size: 0.9rem; margin-bottom: 24px; }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .tab {
+      padding: 8px 18px;
+      border: 1px solid #ddd;
+      border-radius: 20px;
+      background: white;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+    }
+    .tab.active {
+      background: #4CAF50;
+      color: white;
+      border-color: #4CAF50;
+    }
+
+    .card {
+      background: white;
+      border-radius: 10px;
+      padding: 24px;
+      border: 1px solid #e0e0e0;
+    }
+    .row {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    input[type="number"] {
+      flex: 1;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 1rem;
+    }
+    select {
+      flex: 1;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 1rem;
+      background: white;
+    }
+    .swap-btn {
+      padding: 10px 14px;
+      background: #f0f0f0;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 1.1rem;
+      transition: background 0.2s;
+    }
+    .swap-btn:hover { background: #e0e0e0; }
+    .result-box {
+      background: #f9f9f9;
+      border-radius: 8px;
+      padding: 20px;
+      text-align: center;
+      margin-top: 8px;
+      border: 1px solid #eee;
+    }
+    .result-number {
+      font-size: 2rem;
+      font-weight: bold;
+      color: #4CAF50;
+    }
+    .result-label {
+      font-size: 0.9rem;
+      color: #888;
+      margin-top: 4px;
+    }
+    footer {
+      margin-top: 40px;
+      text-align: center;
+      font-size: 0.8rem;
+      color: #aaa;
+    }
+    footer a { color: #aaa; margin: 0 8px; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>📐 Unit Converter</h1>
+  <p class="subtitle">Convert length, weight, temperature and speed instantly.</p>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('length', this)">📏 Length</button>
+    <button class="tab" onclick="switchTab('weight', this)">⚖️ Weight</button>
+    <button class="tab" onclick="switchTab('temperature', this)">🌡️ Temperature</button>
+    <button class="tab" onclick="switchTab('speed', this)">💨 Speed</button>
+    <button class="tab" onclick="switchTab('volume', this)">💦 Volume</button>
+    <button class="tab" onclick="switchTab('area', this)">🏠 Area</button>
+    <button class="tab" onclick="switchTab('data', this)">💾 Data</button>
+  </div>
+
+  <div class="card">
+    <div class="row">
+      <input type="number" id="inputValue" placeholder="Enter value"
+             oninput="convert()" value="1">
+      <select id="fromUnit" onchange="convert()"></select>
+    </div>
+    <div class="row" style="justify-content:center">
+      <button class="swap-btn" onclick="swapUnits()">⇅ Swap</button>
+    </div>
+    <div class="row">
+      <select id="toUnit" onchange="convert()"></select>
+    </div>
+    <div class="result-box">
+      <div class="result-number" id="resultNumber">—</div>
+      <div class="result-label" id="resultLabel"></div>
+    </div>
+  </div>
+
+  <footer>
+    <a href="https://darthadas.github.io">Adas's Tools</a>
+    <a href="https://darthadas.github.io/privacy.html">Privacy Policy</a>
+  </footer>
+</div>
+
+<script>
+  // All conversion rates relative to a base unit
+  const units = {
+    length: {
+      base: "meter",
+      units: {
+        "Meter":      1,
+        "Kilometer":  0.001,
+        "Mile":       0.000621371,
+        "Foot":       3.28084,
+        "Inch":       39.3701,
+        "Centimeter": 100,
+        "Millimeter": 1000,
+        "Yard":       1.09361
+      }
+    },
+    weight: {
+      base: "kilogram",
+      units: {
+        "Kilogram": 1,
+        "Gram":     1000,
+        "Pound":    2.20462,
+        "Ounce":    35.274,
+        "Ton":      0.001,
+        "Milligram":1000000
+      }
+    },
+    temperature: {
+      base: "special", // temperature needs special formulas
+      units: {
+        "Celsius":    "C",
+        "Fahrenheit": "F",
+        "Kelvin":     "K"
+      }
+    },
+    speed: {
+      base: "mps",
+      units: {
+        "m/s":  1,
+        "km/h": 3.6,
+        "mph":  2.23694,
+        "knot": 1.94384
+      }
+    },
+    volume: {
+      base: "liters",
+      units: {
+        "liters":  1,
+        "gallons": 0.264172,
+        "ml":  1000,
+        "cups": 4.22675,
+        "pints": 2.11338
+      }
+    },
+    area: {
+      base: "m²",
+      units: {
+        "m²":  1,
+        "km²": 0.000001,
+        "acres": 0.000247105,
+        "hectares": 0.0001,
+        "ft²": 10.7639
+      }
+    },
+    data: {
+      base: "bytes",
+      units: {
+        "bytes":  1,
+        "KB": 0.001,
+        "MB": 0.000001,
+        "GB": 0.000000001,
+        "TB": 0.000000000001
+      }
+    }
+  };
+
+  let currentTab = "length";
+
+  function switchTab(tab, btn) {
+    currentTab = tab;
+    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+    btn.classList.add("active");
+    populateSelects();
+    convert();
+  }
+
+  function populateSelects() {
+    const fromSel = document.getElementById("fromUnit");
+    const toSel = document.getElementById("toUnit");
+    const unitList = Object.keys(units[currentTab].units);
+
+    fromSel.innerHTML = unitList.map(u =>
+      `<option value="${u}">${u}</option>`).join("");
+    toSel.innerHTML = unitList.map((u, i) =>
+      `<option value="${u}" ${i === 1 ? "selected" : ""}>${u}</option>`).join("");
+  }
+
+  function convertTemperature(value, from, to) {
+    // Convert to Celsius first
+    let celsius;
+    if (from === "Celsius")    celsius = value;
+    if (from === "Fahrenheit") celsius = (value - 32) * 5/9;
+    if (from === "Kelvin")     celsius = value - 273.15;
+
+    // Convert from Celsius to target
+    if (to === "Celsius")      return celsius;
+    if (to === "Fahrenheit")   return celsius * 9/5 + 32;
+    if (to === "Kelvin")       return celsius + 273.15;
+  }
+
+  function convert() {
+    const value = parseFloat(document.getElementById("inputValue").value);
+    const from  = document.getElementById("fromUnit").value;
+    const to    = document.getElementById("toUnit").value;
+
+    if (isNaN(value)) {
+      document.getElementById("resultNumber").innerText = "—";
+      return;
+    }
+
+    let result;
+
+    if (currentTab === "temperature") {
+      result = convertTemperature(value, from, to);
+    } else {
+      // Convert via base unit
+      const rates = units[currentTab].units;
+      const baseValue = value / rates[from];
+      result = baseValue * rates[to];
+    }
+
+    const formatted = parseFloat(result.toFixed(6)).toString();
+    document.getElementById("resultNumber").innerText = formatted;
+
+    if (from === to) {
+      document.getElementById("resultLabel").innerText =
+        "Select different units to convert";
+      return;
+    }
+
+    document.getElementById("resultLabel").innerText =
+      `${value} ${from} = ${formatted} ${to}`;
+  }
+
+  function swapUnits() {
+    const from = document.getElementById("fromUnit");
+    const to   = document.getElementById("toUnit");
+    const temp = from.value;
+    from.value = to.value;
+    to.value   = temp;
+    convert();
+  }
+
+  // Initialise
+  populateSelects();
+  convert();
+</script>
+</body>
+</html>
